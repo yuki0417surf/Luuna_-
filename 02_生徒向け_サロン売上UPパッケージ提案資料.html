@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>サロン売上UPパッケージ｜school by Luuna</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Noto Sans JP', sans-serif; color: #1a1a2e; background: #f4efe7; }
+
+  html, body { height: 100%; overflow: hidden; }
+  .slide {
+    width: 100vw;
+    height: 100vh;
+    padding: 60px 80px;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    overflow: auto;
+  }
+  .slide.active { display: flex; }
+  .slide > * { max-width: 1100px; width: 100%; margin-left: auto; margin-right: auto; }
+  .slide-num { position: absolute; bottom: 24px; right: 32px; font-size: 12px; color: #bbb; font-weight: 700; }
+
+  /* ナビゲーション */
+  .nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    display: flex; align-items: center; justify-content: center; gap: 24px;
+    padding: 16px; background: rgba(255,255,255,0.85); backdrop-filter: blur(4px);
+    z-index: 100; box-shadow: 0 -2px 12px rgba(0,0,0,0.06);
+  }
+  .nav button {
+    background: #A98A63; color: white; border: none; border-radius: 50%;
+    width: 44px; height: 44px; font-size: 18px; cursor: pointer; font-weight: 900;
+  }
+  .nav button:disabled { background: #ddd; cursor: default; }
+  .nav .counter { font-size: 14px; font-weight: 700; color: #555; min-width: 60px; text-align: center; }
+
+  @media (max-width: 768px) {
+    .slide { padding: 70px 22px 90px; }
+  }
+
+  @media print {
+    html, body { height: auto; overflow: visible; }
+    .slide {
+      display: flex !important;
+      width: 100%;
+      height: 100vh;
+      page-break-after: always;
+      overflow: hidden;
+    }
+    .nav { display: none !important; }
+  }
+
+  .label { font-size: 12px; font-weight: 700; letter-spacing: 4px; color: #A98A63; margin-bottom: 14px; text-transform: uppercase; }
+  h1.title { font-size: 36px; font-weight: 900; line-height: 1.5; margin-bottom: 20px; }
+  h1.title span { color: #A98A63; }
+  .desc { font-size: 15px; color: #555; line-height: 2; margin-bottom: 36px; }
+
+  /* HERO */
+  .hero {
+    background: linear-gradient(135deg, #A98A63 0%, #8B6F47 60%, #6B5337 100%);
+    color: white; text-align: center; justify-content: center; align-items: center;
+  }
+  .hero .badge {
+    display: inline-block; background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.4); border-radius: 20px;
+    padding: 8px 24px; font-size: 14px; letter-spacing: 3px; margin-bottom: 28px;
+  }
+  .hero h1 { font-size: 42px; font-weight: 900; line-height: 1.5; margin-bottom: 24px; }
+  .hero h1 span { color: #F0D9B5; }
+  .hero p { font-size: 17px; opacity: 0.9; max-width: 620px; margin: 0 auto; line-height: 2; }
+
+  /* カード共通 */
+  .card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+  .card-grid.cols2 { grid-template-columns: repeat(2, 1fr); }
+  .card {
+    background: white; border-radius: 16px; padding: 28px 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  }
+  .card.pain { border-top: 4px solid #ff6b6b; }
+  .card.tan { border-top: 4px solid #A98A63; }
+  .card .icon { font-size: 34px; margin-bottom: 16px; }
+  .card h3 { font-size: 17px; font-weight: 700; margin-bottom: 10px; }
+  .card h4 { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+  .card p { font-size: 14px; color: #666; line-height: 1.9; }
+
+  /* 3ステップ */
+  .flow-bg { background: white; border-radius: 24px; padding: 44px; box-shadow: 0 4px 30px rgba(0,0,0,0.06); }
+  .flow-steps { display: flex; align-items: stretch; gap: 0; }
+  .flow-step { flex: 1; text-align: center; padding: 28px 20px; background: #FAF6EF; border-radius: 16px; }
+  .flow-step .step-num {
+    width: 40px; height: 40px; background: #A98A63; color: white;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 18px; margin: 0 auto 16px;
+  }
+  .flow-step h3 { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+  .flow-step p { font-size: 13px; color: #555; line-height: 1.7; }
+  .flow-arrow { display:flex; align-items:center; font-size: 28px; color: #A98A63; padding: 0 14px; font-weight: 900; }
+  .flow-step.active { background: linear-gradient(135deg, #F5EFE6, #EDE0CC); border: 2px solid #A98A63; }
+  .flow-step.active .step-num { background: #8B6F47; }
+
+  /* 説明（解説）スライド */
+  .explain-box {
+    background: white; border-radius: 24px; padding: 44px;
+    box-shadow: 0 4px 30px rgba(0,0,0,0.06); display: flex; gap: 36px; align-items: center;
+  }
+  .explain-box .ex-icon {
+    flex-shrink: 0; width: 120px; height: 120px; border-radius: 50%;
+    background: linear-gradient(135deg, #F5EFE6, #EDE0CC);
+    display: flex; align-items: center; justify-content: center; font-size: 56px;
+  }
+  .explain-box .ex-text h3 { font-size: 20px; font-weight: 900; margin-bottom: 14px; }
+  .explain-box .ex-text p { font-size: 15px; color: #555; line-height: 2; }
+  .explain-steps { margin-top: 28px; display: flex; gap: 16px; }
+  .explain-step {
+    flex: 1; background: #FAF6EF; border-radius: 12px; padding: 18px;
+    font-size: 13px; color: #555; line-height: 1.8; text-align: center;
+  }
+  .explain-step .es-num {
+    display: inline-flex; width: 28px; height: 28px; border-radius: 50%;
+    background: #A98A63; color: white; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 13px; margin-bottom: 10px;
+  }
+
+  /* 検索イメージ（MEO/AIO）モックアップ */
+  .know-row { display: flex; gap: 32px; align-items: stretch; }
+  .know-row .know-text { flex: 1.1; display: flex; flex-direction: column; justify-content: center; }
+  .know-row .know-visual { flex: 1; display: flex; align-items: center; justify-content: center; }
+  .phone-mock {
+    width: 260px; background: #fff; border-radius: 28px; border: 6px solid #2b2b2b;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.18); overflow: hidden;
+  }
+  .phone-bar {
+    background: #f1f1f1; padding: 10px 14px; font-size: 12px; color: #555;
+    border-bottom: 1px solid #e3e3e3; display: flex; align-items: center; gap: 6px;
+  }
+  .phone-bar .dot { width: 8px; height: 8px; border-radius: 50%; background: #4285F4; }
+  .map-area {
+    height: 100px; background: linear-gradient(135deg, #cfe8d8, #bcdcc9);
+    position: relative;
+  }
+  .map-area .pin { position: absolute; font-size: 22px; }
+  .map-area .pin.p1 { top: 18px; left: 30px; }
+  .map-area .pin.p2 { top: 50px; left: 110px; color:#A98A63; }
+  .map-area .pin.p3 { top: 30px; left: 190px; }
+  .result-list { padding: 10px 12px; }
+  .result-item {
+    display: flex; gap: 10px; align-items: center; padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0; font-size: 11px;
+  }
+  .result-item:last-child { border-bottom: none; }
+  .result-item .thumb { width: 34px; height: 34px; border-radius: 8px; background: #e0e0e0; flex-shrink: 0; }
+  .result-item .ri-name { font-weight: 700; color: #333; }
+  .result-item .ri-sub { color: #999; font-size: 10px; }
+  .result-item.highlight { background: #FAF6EF; border-radius: 10px; margin: 0 -8px; padding: 8px; border-bottom: none; }
+  .result-item.highlight .thumb { background: linear-gradient(135deg, #A98A63, #8B6F47); }
+  .result-item.highlight .ri-name { color: #8B6F47; }
+
+  .chat-screen { padding: 14px; display: flex; flex-direction: column; gap: 10px; min-height: 220px; background: #fafafa; }
+  .chat-bubble { font-size: 12px; line-height: 1.6; padding: 10px 14px; border-radius: 14px; max-width: 88%; }
+  .chat-bubble.user { align-self: flex-end; background: #4285F4; color: white; border-bottom-right-radius: 4px; }
+  .chat-bubble.ai { align-self: flex-start; background: #fff; border: 1px solid #eee; border-bottom-left-radius: 4px; }
+  .chat-store-card {
+    align-self: flex-start; background: #FAF6EF; border: 1px solid #EDE0CC; border-radius: 12px;
+    padding: 10px 12px; font-size: 11px; max-width: 88%;
+  }
+  .chat-store-card .cs-name { font-weight: 900; color: #8B6F47; margin-bottom: 4px; }
+  .chat-store-card .cs-check { color: #34A853; font-weight: 700; }
+
+  /* Google AIによる概要 モック */
+  .browser-mock {
+    width: 360px; background: #fff; border-radius: 14px; border: 1px solid #e0e0e0;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.12); overflow: hidden;
+  }
+  .browser-mock .search-bar {
+    display: flex; align-items: center; gap: 8px; padding: 12px 16px;
+    border-bottom: 1px solid #eee; font-size: 13px; color: #333;
+  }
+  .browser-mock .search-bar .sicon { color: #4285F4; }
+  .browser-mock .search-tabs {
+    display: flex; gap: 16px; padding: 8px 16px; font-size: 11px; color: #999;
+    border-bottom: 1px solid #eee;
+  }
+  .browser-mock .search-tabs .active { color: #1a73e8; font-weight: 700; border-bottom: 2px solid #1a73e8; padding-bottom: 6px; }
+  .aio-box { padding: 14px 16px; }
+  .aio-title {
+    display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700;
+    color: #444; margin-bottom: 10px;
+  }
+  .aio-title .spark { color: #4285F4; }
+  .aio-text { font-size: 11px; color: #444; line-height: 1.8; margin-bottom: 12px; }
+  .aio-text mark { background: #d2e3fc; color: #1a1a2e; padding: 0 2px; }
+  .aio-list { list-style: none; padding: 0; }
+  .aio-list li { font-size: 11px; line-height: 1.7; padding: 8px 0; border-top: 1px solid #f2f2f2; }
+  .aio-list li .aio-name { font-weight: 700; color: #1a1a2e; }
+  .aio-list li .aio-desc { color: #777; }
+
+  /* Google マップ検索結果 モック */
+  .meo-map {
+    height: 130px; position: relative; border-bottom: 1px solid #eee;
+    background:
+      radial-gradient(circle at 20% 30%, #fde9d9 0 6%, transparent 6%),
+      radial-gradient(circle at 70% 70%, #fde9d9 0 5%, transparent 5%),
+      linear-gradient(135deg, #f3ede4, #e9e2d6);
+  }
+  .meo-map::before {
+    content: ''; position: absolute; inset: 0;
+    background-image:
+      linear-gradient(#dcd4c6 1px, transparent 1px),
+      linear-gradient(90deg, #dcd4c6 1px, transparent 1px);
+    background-size: 28px 28px; opacity: 0.5;
+  }
+  .meo-map .mpin { position: absolute; font-size: 20px; color: #EA4335; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.25)); }
+  .meo-map .mpin.gold { color: #A98A63; font-size: 26px; }
+  .meo-map .mpin.p1 { top: 18px; left: 26px; }
+  .meo-map .mpin.p2 { top: 60px; left: 150px; }
+  .meo-map .mpin.p3 { top: 30px; left: 250px; }
+  .meo-map .mpin.p4 { top: 80px; left: 70px; }
+  .meo-map .mpin.p5 { top: 95px; left: 220px; }
+  .meo-list { padding: 4px 16px; }
+  .meo-item { padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+  .meo-item:last-child { border-bottom: none; }
+  .meo-item .mi-name { font-size: 13px; font-weight: 700; color: #1a1a2e; }
+  .meo-item .mi-rating { font-size: 11px; color: #70757a; margin-top: 2px; }
+  .meo-item .mi-rating .stars { color: #fbbc04; letter-spacing: -1px; }
+  .meo-item .mi-meta { font-size: 11px; color: #70757a; margin-top: 2px; }
+  .meo-item .mi-meta .open { color: #188038; }
+  .meo-item.highlight { background: #FAF6EF; border-radius: 10px; margin: 0 -10px; padding: 10px; border-bottom: none; }
+  .meo-item.highlight .mi-name { color: #8B6F47; }
+
+  /* ステップ詳細ブロック */
+  .step-block {
+    background: white; border-radius: 24px; padding: 44px;
+    box-shadow: 0 4px 30px rgba(0,0,0,0.06);
+  }
+  .step-header { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
+  .step-tag { background: #A98A63; color: white; border-radius: 8px; padding: 6px 16px; font-size: 13px; font-weight: 700; white-space: nowrap; }
+  .step-header h2 { font-size: 22px; font-weight: 900; }
+
+  .icon-row { display:flex; justify-content:center; gap:12px; flex-wrap:wrap; margin: 24px 0; }
+  .icon-pill { padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; color: white; }
+
+  /* 補助金 */
+  .subsidy-box { background: linear-gradient(135deg, #F5EFE6, #EDE0CC); border-radius: 16px; padding: 32px; border: 2px solid #A98A63; }
+  .subsidy-box h3 { font-size: 18px; font-weight: 900; margin-bottom: 14px; color: #8B6F47; }
+  .subsidy-box p { font-size: 14px; color: #444; line-height: 2; }
+
+  /* 価格 */
+  .price-box { background: white; border-radius: 24px; padding: 48px; box-shadow: 0 4px 30px rgba(0,0,0,0.06); text-align: center; }
+  .price-box .price-tag {
+    display: inline-block; margin: 20px 0; padding: 20px 48px;
+    background: linear-gradient(135deg, #A98A63, #8B6F47); color: white;
+    border-radius: 16px; font-size: 22px; font-weight: 900;
+  }
+  .price-box p.note { font-size: 14px; color: #888; max-width: 520px; margin: 16px auto 0; line-height: 1.8; }
+
+  /* CTA */
+  .cta { background: linear-gradient(135deg, #A98A63, #8B6F47); color:white; text-align: center; align-items: center; justify-content: center; }
+  .cta h1 { font-size: 32px; font-weight: 900; margin-bottom: 20px; }
+  .cta p { font-size: 16px; opacity: 0.9; line-height: 2; max-width: 560px; margin: 0 auto 28px; }
+  .cta .brand { font-size: 22px; font-weight: 900; letter-spacing: 2px; padding-top: 28px; border-top: 1px solid rgba(255,255,255,0.25); display:inline-block; }
+
+  @media (max-width: 768px) {
+    .hero h1 { font-size: 28px; }
+    h1.title { font-size: 24px; }
+    .card-grid, .card-grid.cols2 { grid-template-columns: 1fr; }
+    .flow-steps, .explain-steps { flex-direction: column; }
+    .flow-arrow { transform: rotate(90deg); align-self: center; padding: 8px 0; }
+    .explain-box { flex-direction: column; text-align: center; }
+    .know-row { flex-direction: column; }
+    .phone-mock { width: 200px; }
+    .browser-mock { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SLIDE 1: HERO -->
+<div class="slide hero active">
+  <div class="badge">school by Luuna</div>
+  <h1>「技術」も「集客」も。<br><span>サロン売上UPパッケージ</span></h1>
+  <p>技術を学んでも、知られなければお客様は来ません。<br>
+  施術力アップと集客の仕組み化を、ひとつのパッケージで。</p>
+  <div class="slide-num" style="color:rgba(255,255,255,0.5);">01</div>
+</div>
+
+<!-- SLIDE 2: お悩み -->
+<div class="slide" style="background:white;">
+  <div class="label">PROBLEM</div>
+  <h1 class="title">こんなお悩み、<br><span>ありませんか？</span></h1>
+  <div class="card-grid">
+    <div class="card pain">
+      <div class="icon">✋</div>
+      <h3>技術はあるのに予約が増えない</h3>
+      <p>施術には自信があるのに、ミニモやGoogleでお店を見つけてもらえていない。</p>
+    </div>
+    <div class="card pain">
+      <div class="icon">📱</div>
+      <h3>SNS発信が続かない</h3>
+      <p>Instagramを頑張ろうと思っても、投稿を考える時間がなく更新が止まってしまう。</p>
+    </div>
+    <div class="card pain">
+      <div class="icon">🔁</div>
+      <h3>新しいメニューが広がらない</h3>
+      <p>コルギ・アイブロウなど新しい技術を学んでも、その魅力をお客様に伝えきれていない。</p>
+    </div>
+  </div>
+  <div class="slide-num">02</div>
+</div>
+
+<!-- SLIDE 3: 3ステップ全体図 -->
+<div class="slide" style="background:#f4efe7;">
+  <div class="label">SOLUTION</div>
+  <h1 class="title">3つのステップで、<span>売上の出るサロンへ</span></h1>
+  <div class="desc">
+    「技術を磨く」→「予約の入口を整える」→「集客を自動化する」。<br>
+    この3つが揃って、はじめて売上は伸びていきます。
+  </div>
+  <div class="flow-bg">
+    <div class="flow-steps">
+      <div class="flow-step">
+        <div class="step-num">1</div>
+        <h3>施術技術の教育</h3>
+        <p>コルギ・アイブロウなど<br>新メニューを習得</p>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="step-num">2</div>
+        <h3>予約導線の整備</h3>
+        <p>ミニモ集客・予約運用を<br>コンサルで仕組み化</p>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step active">
+        <div class="step-num">3</div>
+        <h3>集客の自動化</h3>
+        <p>Instagramと連動して<br>お店の情報を広げる</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">03</div>
+</div>
+
+<!-- SLIDE 4: ミニモとは -->
+<div class="slide" style="background:white;">
+  <div class="label">KNOWLEDGE 1</div>
+  <h1 class="title"><span>ミニモ</span>って、何？</h1>
+  <div class="explain-box">
+    <div class="ex-icon">📲</div>
+    <div class="ex-text">
+      <h3>お客様が「サロンを探す・予約する」ためのスマホアプリです</h3>
+      <p>
+        若い女性を中心に多くの方が使っている、美容サロンの予約アプリです。<br>
+        施術メニューの写真・料金・口コミを見て、その場で予約ができます。<br><br>
+        <strong>つまり：</strong>このアプリの中での「お店の見え方」が悪いと、せっかく技術が良くても選ばれません。
+        プロフィール写真・メニューの見せ方・キャンペーンの組み方を整えることで、新規のお客様が予約しやすくなります。
+      </p>
+    </div>
+  </div>
+  <div class="slide-num">04</div>
+</div>
+
+<!-- SLIDE 5: STEP1+2 詳細 -->
+<div class="slide" style="background:#f4efe7;">
+  <div class="label">STEP 1 ＆ 2</div>
+  <h1 class="title">school by Luuna で<br>学ぶこと</h1>
+  <div class="step-block">
+    <div class="step-header">
+      <div class="step-tag">school by Luuna</div>
+      <h2>技術＋経営の両面をサポート</h2>
+    </div>
+    <div class="card-grid">
+      <div class="card tan">
+        <h4>📲 ミニモ集客コンサル</h4>
+        <p>掲載写真・メニュー・キャンペーン設計を見直し、新規予約が入るプロフィールに整えます。</p>
+      </div>
+      <div class="card tan">
+        <h4>📅 予約取得・運用コンサル</h4>
+        <p>予約が取りやすく、リピートにつながる予約導線・接客フローを一緒に設計します。</p>
+      </div>
+      <div class="card tan">
+        <h4>💆 施術技術教育</h4>
+        <p>コルギ・アイブロウなど人気メニューの技術を習得し、サロンの強みを増やします。</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">05</div>
+</div>
+
+<!-- SLIDE 6: Googleマップで見つかるとは -->
+<div class="slide" style="background:white;">
+  <div class="label">KNOWLEDGE 2</div>
+  <h1 class="title"><span>Googleマップ</span>で<br>見つけてもらうって、どういうこと？</h1>
+  <div class="know-row">
+    <div class="know-text">
+      <div class="explain-box">
+        <div class="ex-icon">🗺️</div>
+        <div class="ex-text">
+          <h3>「地名＋エステ」で検索した時に、地図と一緒にお店が表示される仕組みです</h3>
+          <p>
+            お客様がスマホで「東桜　エステ」のように検索すると、地図と一緒にお店の一覧が出てきます。<br>
+            この一覧の上の方に表示されるかどうかで、新規のお客様の目に触れる回数が大きく変わります。
+          </p>
+        </div>
+      </div>
+      <div class="explain-steps">
+        <div class="explain-step"><div class="es-num">1</div>お店の住所・電話番号・営業時間などの基本情報を正しく整える</div>
+        <div class="explain-step"><div class="es-num">2</div>施術写真やお店の雰囲気が伝わる写真を増やす</div>
+        <div class="explain-step"><div class="es-num">3</div>口コミの件数・評価を増やしていく</div>
+      </div>
+    </div>
+    <div class="know-visual">
+      <div class="browser-mock">
+        <div class="search-bar"><span class="sicon">🔍</span>東桜　エステ</div>
+        <div class="meo-map">
+          <div class="mpin gold p2">📍</div>
+          <div class="mpin p1">📍</div>
+          <div class="mpin p3">📍</div>
+          <div class="mpin p4">📍</div>
+          <div class="mpin p5">📍</div>
+        </div>
+        <div class="meo-list">
+          <div class="meo-item highlight">
+            <div class="mi-name">Luuna（東桜）</div>
+            <div class="mi-rating"><span class="stars">★★★★★</span> 4.9（134）・エステサロン</div>
+            <div class="mi-meta"><span class="open">営業中</span>・営業終了：21:00</div>
+          </div>
+          <div class="meo-item">
+            <div class="mi-name">他店A</div>
+            <div class="mi-rating"><span class="stars">★★★★</span> 4.2（38）・エステサロン</div>
+            <div class="mi-meta"><span class="open">営業中</span>・営業終了：20:00</div>
+          </div>
+          <div class="meo-item">
+            <div class="mi-name">他店B</div>
+            <div class="mi-rating"><span class="stars">★★★★</span> 4.0（12）・エステサロン</div>
+            <div class="mi-meta"><span class="open">営業中</span>・営業終了：19:30</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">06</div>
+</div>
+
+<!-- SLIDE 7: AIで見つけられるとは -->
+<div class="slide" style="background:#f4efe7;">
+  <div class="label">KNOWLEDGE 3</div>
+  <h1 class="title"><span>AIで見つけてもらう</span>って、<br>どういうこと？</h1>
+  <div class="know-row">
+    <div class="know-text">
+      <div class="explain-box">
+        <div class="ex-icon">🤖</div>
+        <div class="ex-text">
+          <h3>「近くのいいエステ教えて」とAIに聞く人が増えています</h3>
+          <p>
+            最近は、ホットペッパーやGoogleで調べるのと同じように、ChatGPTやスマホの音声アシスタントに「近くのおすすめのエステは？」と聞く人が増えてきました。<br><br>
+            AIは、インターネット上の色々なサイトに載っているお店の情報を見て答えを作ります。<br>
+            そのため、お店の名前・住所・電話番号などの情報を、いろいろなサイトに同じ内容で正しく登録しておくことで、AIに「ちゃんとしたお店」と認識してもらいやすくなり、紹介してもらえる可能性が上がります。
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="know-visual">
+      <div class="browser-mock">
+        <div class="search-bar"><span class="sicon">🔍</span>東桜　エステ　おすすめ</div>
+        <div class="search-tabs">
+          <span class="active">すべて</span><span>地図</span><span>画像</span><span>もっと見る</span>
+        </div>
+        <div class="aio-box">
+          <div class="aio-title"><span class="spark">✦</span>AIによる概要</div>
+          <div class="aio-text">
+            東桜エリアには、口コミが多く<mark>情報が整っているお店</mark>を中心に、いくつかおすすめのエステサロンがあります。
+          </div>
+          <ul class="aio-list">
+            <li><span class="aio-name">サロンA</span><br><span class="aio-desc">住所・営業時間・口コミが各サイトで一致しており、最新情報が確認できる</span></li>
+            <li><span class="aio-name">サロンB</span><br><span class="aio-desc">写真と口コミが豊富で、施術内容がわかりやすい</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">07</div>
+</div>
+
+<!-- SLIDE 8: STEP3 詳細 -->
+<div class="slide" style="background:white;">
+  <div class="label">STEP 3</div>
+  <h1 class="title">school by Luuna が<br>提供する集客自動化</h1>
+  <div class="step-block">
+    <div class="step-header">
+      <div class="step-tag">集客自動化の仕組み</div>
+      <h2>Instagramに投稿するだけで、全部つながる</h2>
+    </div>
+
+    <div style="background:#FAF6EF; border-radius:16px; padding:24px; margin-bottom:24px; text-align:center;">
+      <div style="font-size:15px; font-weight:700; margin-bottom:14px;">📱 1回の投稿が、自動でここまで広がります</div>
+      <div class="icon-row">
+        <span class="icon-pill" style="background:#4285F4;">Googleマップ</span>
+        <span class="icon-pill" style="background:#EA4335;">スマホで聞くAIアシスタント</span>
+        <span class="icon-pill" style="background:#06C755;">公式LINE</span>
+        <span class="icon-pill" style="background:#1a1a2e;">＋ 世界中のお店検索サイト</span>
+      </div>
+    </div>
+
+    <div class="card-grid">
+      <div class="card tan">
+        <h4>🔍 AIでもGoogleでも見つかる</h4>
+        <p>「近くのエステ」とAIやGoogleで調べた時に、お店の情報が出てくるようにします。</p>
+      </div>
+      <div class="card tan">
+        <h4>⭐ 口コミが増える仕組み</h4>
+        <p>満足度の高いお客様だけをGoogle口コミへ案内。評価を着実に積み上げます。</p>
+      </div>
+      <div class="card tan">
+        <h4>💬 公式LINEでリピート促進</h4>
+        <p>新メニュー・キャンペーンを自動配信し、来店サイクルを作ります。</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">08</div>
+</div>
+
+<!-- SLIDE 9: 補助金 -->
+<div class="slide" style="background:#f4efe7;">
+  <div class="label">SUPPORT</div>
+  <h1 class="title">国の助成金が<br><span>使える場合があります</span></h1>
+  <div class="subsidy-box">
+    <h3>🏛️ 集客の仕組みを取り入れる費用の一部が戻ってくることも</h3>
+    <p>
+      こうした集客の仕組みを取り入れる際、国の助成金で費用の一部が戻ってくる場合があります。<br>
+      手続きのお手伝いもいたします。<br><br>
+      ※ 対象になるかどうか・戻ってくる金額は、サロン様の状況に応じて個別にご案内します。
+    </p>
+  </div>
+  <div class="slide-num">09</div>
+</div>
+
+<!-- SLIDE 10: 価格 -->
+<div class="slide" style="background:white;">
+  <div class="label">PRICE</div>
+  <h1 class="title">ご費用について</h1>
+  <div class="price-box">
+    <h2 style="font-size:22px; font-weight:900;">パッケージ料金は、別途お見積りいたします</h2>
+    <div class="price-tag">サロン様ごとに最適なプランをご提案</div>
+    <p class="note">
+      スクールメニュー（コンサル・教育）と集客自動化ツールの導入費は、組み合わせ内容によって変動します。<br>
+      助成金適用後の実質負担額もあわせて、個別にお見積りさせていただきます。
+    </p>
+  </div>
+  <div class="slide-num">10</div>
+</div>
+
+<!-- SLIDE 11: CTA -->
+<div class="slide cta">
+  <h1>まずは無料相談から</h1>
+  <p>
+    「技術」も「集客」も、両方ちゃんと整えたい。<br>
+    そんなサロンさまは、ぜひ一度ご相談ください。
+  </p>
+  <div class="brand">school by Luuna</div>
+  <div class="slide-num" style="color:rgba(255,255,255,0.5);">11 / 11</div>
+</div>
+
+<div class="nav">
+  <button id="prevBtn" aria-label="前へ">←</button>
+  <div class="counter"><span id="curNum">1</span> / <span id="totalNum"></span></div>
+  <button id="nextBtn" aria-label="次へ">→</button>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  let current = 0;
+  document.getElementById('totalNum').textContent = slides.length;
+
+  function show(i) {
+    slides[current].classList.remove('active');
+    current = Math.max(0, Math.min(slides.length - 1, i));
+    slides[current].classList.add('active');
+    document.getElementById('curNum').textContent = current + 1;
+    document.getElementById('prevBtn').disabled = current === 0;
+    document.getElementById('nextBtn').disabled = current === slides.length - 1;
+  }
+
+  document.getElementById('prevBtn').addEventListener('click', () => show(current - 1));
+  document.getElementById('nextBtn').addEventListener('click', () => show(current + 1));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ') show(current + 1);
+    if (e.key === 'ArrowLeft') show(current - 1);
+  });
+
+  show(0);
+</script>
+
+</body>
+</html>
